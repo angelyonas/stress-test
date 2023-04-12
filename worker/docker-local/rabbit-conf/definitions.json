@@ -1,0 +1,30 @@
+{
+    "rabbit_version": "3.9",
+    "users": [
+        {
+            "name": "stresstestxworker",
+            "password": "nirvana",
+            "tags": "administrator",
+            "limits": {}
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "stresstest"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "stresstestxworker",
+            "vhost": "stresstest",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ],
+    "parameters": [],
+    "policies": [],
+    "queues":[],
+    "exchanges": [],
+    "bindings": []
+}

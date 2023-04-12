@@ -1,0 +1,22 @@
+version: "3"
+name: stress-test
+networks:
+  stress-worker_app-shared:
+    external: true
+
+services:
+  app:
+    container_name: stress-test-rest
+    platform: linux/x86_64
+    env_file:
+      ../.env
+    restart: always
+    build:
+      context: ../
+      dockerfile: ./Dockerfile
+    volumes:
+      - ../:/home/node
+    ports:
+      - 8288:8080
+    networks:
+      - stress-worker_app-shared
