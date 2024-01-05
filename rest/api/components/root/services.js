@@ -1,4 +1,4 @@
-const { sendToQueueWaitResponse } = require("../../helpers");
+const { sendToQueueWaitResponse, getRandNumber } = require("../../helpers");
 const logger = require("../../../services/logger");
 
 const logTag = "[root.services]";
@@ -31,23 +31,26 @@ const shootingQueries = async (body) => {
     currentInterval += 1;
     const listQueries = [];
 
-    const fillList = ({ payload, apiUrl, accessToken }) =>
+    const fillList = ({ payload, apiUrl, accessToken, script }) =>
       listQueries.push({
-        body: { payload, apiUrl, accessToken },
+        body: { payload, apiUrl, accessToken, script },
         operation: RABBIT_OPERATION,
       });
 
     if (Array.isArray(body)) {
       body.forEach((data) => {
-        const { payload, apiUrl, accessToken } = data;
+        const { payload, apiUrl, accessToken, script } = data;
         let id  = payload.id;
         payload.id = `${id}-${currentInterval}`;
-        fillList({ payload, apiUrl, accessToken });
+        fillList({ payload, apiUrl, accessToken, script });
       });
     } else {
-      const { payload = {}, apiUrl = "https://www.google.com/", accessToken } = body;
+      logger.info({ body: JSON.stringify(body) });
+      const { payload = {}, apiUrl = "https://www.google.com/", accessToken, script } = body;
+      let id = payload.id;
+      payload.id = `${id}-${currentInterval}`;
       for (let i = 1; i <= queriesNumber; i++) {
-        fillList({ payload, apiUrl, accessToken });
+        fillList({ payload, apiUrl, accessToken, script });
       }
     }
 
@@ -72,6 +75,14 @@ const shootingQueries = async (body) => {
   }
 };
 
+const getBodyWithRandId = (body, i) => {
+  const bodyObj = JSON.parse(JSON.stringify(body));
+  const { payload } = bodyObj;
+  payload.id = `${payload.id || getRandNumber(loopsNumber * loopsNumber)}${i}`;
+  const data = { ...bodyObj, payload };
+  return data;
+}
+
 /**
  * Start process to send queries
  * @param {*} body
@@ -89,20 +100,17 @@ const startProcess = (body) => {
       content[i] = [];
       for (let j = 0; j < iterations; j++) {
         if (indexArray < body.length) {
-          content[i].push(body[indexArray]);
+          content[i].push(getBodyWithRandId(body[indexArray], i));
           indexArray++;
         }
       }
     }
   } else if (loopsNumber > 1) {
     for (let i = 0; i < loopsNumber; i++) {
-      const bodyObj = JSON.parse(JSON.stringify(body));
-      const { payload } = bodyObj;
-      payload.id = `${payload.id}-${i}`;
-      content.push({ ...bodyObj, payload });
+      content.push(getBodyWithRandId(body, i));
     }
   } else {
-    content = [body];
+    content.push(getBodyWithRandId(body, 1));
   }
 
   intervalShots = setInterval(async () => {
@@ -114,6 +122,7 @@ const startProcess = (body) => {
       console.log(`Finished interval of shooting!`);
       return;
     }
+
     await shootingQueries(content[currentInterval - 1]);
   }, delay);
 };

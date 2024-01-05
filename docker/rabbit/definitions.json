@@ -2,7 +2,7 @@
     "rabbit_version": "3.9",
     "users": [
         {
-            "name": "stresstestxworker",
+            "name": "stressrabbit",
             "password": "nirvana",
             "tags": "administrator",
             "limits": {}
@@ -10,13 +10,13 @@
     ],
     "vhosts": [
         {
-            "name": "stresstest"
+            "name": "stress"
         }
     ],
     "permissions": [
         {
-            "user": "stresstestxworker",
-            "vhost": "stresstest",
+            "user": "stressrabbit",
+            "vhost": "stress",
             "configure": ".*",
             "write": ".*",
             "read": ".*"

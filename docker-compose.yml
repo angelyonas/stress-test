@@ -1,0 +1,51 @@
+version: '3.8'
+name: stress-test
+networks:
+  app-shared:
+    driver: bridge
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 5676:5672
+      - 15676:15672
+    volumes:
+      - ./docker/rabbit/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./docker/rabbit/definitions.json:/etc/rabbitmq/definitions.json:ro
+    networks:
+      - app-shared
+
+  worker:
+    container_name: worker
+    platform: linux/x86_64
+    env_file:
+      - ./worker/.env
+    restart: always
+    depends_on:
+      - rabbitmq
+    build: ./worker
+    ports:
+      - 8827:8081
+    networks:
+      - app-shared
+    volumes:
+      - ./worker/logs/:/home/node/logs
+
+  rest:
+    container_name: rest
+    platform: linux/x86_64
+    env_file:
+      - ./rest/.env
+    restart: always
+    depends_on:
+      - rabbitmq
+    build: ./rest
+    ports:
+      - 8288:8080
+    networks:
+      - app-shared
+    volumes:
+      - ./rest/logs/:/home/node/logs
